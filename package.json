@@ -1,0 +1,14 @@
+{
+  "name": "levitt",
+  "version": "1.0.0",
+  "description": "This repository provides a small command-line utility that converts an image into a numeric matrix where the minimum intensity maps to 0 and the maximum intensity maps to 256.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "python -m flask --app app run --port 8000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

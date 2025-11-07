@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Image to Matrix Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Image & Video Matrix Converter</h1>
+      <p class="lead">
+        Upload a single image or a short video to generate 50×50 grayscale matrices with values scaled between 0 and 256.
+      </p>
+
+      <section class="card">
+        <h2>Single Image</h2>
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+          <input type="hidden" name="mode" value="image" />
+          <label for="image">Choose an image file:</label>
+          <input type="file" id="image" name="image" accept="image/*" required />
+          <button type="submit">Convert Image</button>
+        </form>
+
+        {% if image_error %}
+        <p class="feedback error">{{ image_error }}</p>
+        {% endif %}
+
+        {% if image_output %}
+        <div class="result">
+          <h3>Matrix Output</h3>
+          <pre><code>{{ image_output }}</code></pre>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <h2>Video Frames</h2>
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+          <input type="hidden" name="mode" value="video" />
+          <label for="video">Choose a video file:</label>
+          <input type="file" id="video" name="video" accept="video/*" required />
+
+          <div class="form-grid">
+            <label>
+              Frame skip
+              <input type="number" name="frame_skip" min="1" value="1" />
+              <span class="hint">Process every n-th frame</span>
+            </label>
+            <label>
+              Max frames
+              <input type="number" name="max_frames" min="1" max="{{ max_frames }}" value="10" />
+              <span class="hint">Up to {{ max_frames }} frames shown</span>
+            </label>
+          </div>
+
+          <button type="submit">Convert Video</button>
+        </form>
+
+        {% if video_error %}
+        <p class="feedback error">{{ video_error }}</p>
+        {% endif %}
+
+        {% if video_outputs %}
+        <div class="result">
+          <h3>Frame Matrices</h3>
+          <p class="hint">Showing {{ video_outputs|length }} converted frames.</p>
+          <div class="frame-list">
+            {% for frame in video_outputs %}
+            <details>
+              <summary>{{ frame.label }}</summary>
+              <pre><code>{{ frame.matrix }}</code></pre>
+            </details>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </section>
+    </main>
+  </body>
+</html>
