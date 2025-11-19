@@ -3,7 +3,7 @@
 This project turns pixel data into Sage-compatible matrices. It ships with:
 
 - A command-line utility for converting any image into a matrix whose values are rescaled between `0` and `256`.
-- A Flask web app that handles both single-image uploads and video clips, resizing content to `50×50` before generating matrices such as:
+- A Flask web app that handles both single-image uploads and video clips, resizing content to a configurable size (default `50×50`) before generating matrices such as:
 
 ```text
 M = matrix([
@@ -48,12 +48,15 @@ Once opened in the browser you can choose between two panels:
 ### 1. Image Matrix Converter
 
 - Upload any still image.
-- The server converts it to grayscale, resizes it to `50×50`, rescales values to `0–256`, and renders a Sage-friendly `M = matrix([...])` block you can copy directly.
+- Choose the width and height for the generated matrix (between 10 and 200 pixels, with `50×50` pre-filled).
+- The server converts it to grayscale, resizes it to your requested dimensions, rescales values to `0–256`, and renders a Sage-friendly `M = matrix([...])` block you can copy directly.
 
 ### 2. Video Matrix Converter
 
 - Upload a short video (≤50 MB by default).
 - Configure **Frame Skip** to sample every _n_-th frame and **Max Frames** (up to 25) to limit how many matrices you get back.
+- Pick the width/height for the per-frame matrices so you can trade detail for readability.
+- Choose colormap, intensity range, playback delay, and loop count to preview a `matrix_plot` animation directly in the browser—handy for recreating the `video(...)` helper inside Sage/Colab.
 - Each selected frame is resized, rescaled, and labeled as `M_001`, `M_002`, etc., shown inside collapsible panels so you can expand only the frames you care about.
 
 > Tip: For long clips, increase **Frame Skip** to keep processing quick and results readable.

@@ -9,7 +9,7 @@
     <main class="container">
       <h1>Image & Video Matrix Converter</h1>
       <p class="lead">
-        Upload a single image or a short video to generate 50×50 grayscale matrices with values scaled between 0 and 256.
+        Upload a single image or a short video to generate grayscale matrices (50×50 by default) with values scaled between 0 and 256.
       </p>
 
       <section class="card">
@@ -18,6 +18,32 @@
           <input type="hidden" name="mode" value="image" />
           <label for="image">Choose an image file:</label>
           <input type="file" id="image" name="image" accept="image/*" required />
+          <div class="form-grid">
+            <label>
+              Width (px)
+              <input
+                type="number"
+                name="matrix_width"
+                min="{{ matrix_size_limits.min }}"
+                max="{{ matrix_size_limits.max }}"
+                value="{{ matrix_size.width }}"
+                required
+              />
+              <span class="hint">Between {{ matrix_size_limits.min }} and {{ matrix_size_limits.max }}</span>
+            </label>
+            <label>
+              Height (px)
+              <input
+                type="number"
+                name="matrix_height"
+                min="{{ matrix_size_limits.min }}"
+                max="{{ matrix_size_limits.max }}"
+                value="{{ matrix_size.height }}"
+                required
+              />
+              <span class="hint">Between {{ matrix_size_limits.min }} and {{ matrix_size_limits.max }}</span>
+            </label>
+          </div>
           <button type="submit">Convert Image</button>
         </form>
 
@@ -33,6 +59,8 @@
             <form method="post" class="plot-inline-form">
               <input type="hidden" name="mode" value="plot" />
               <textarea name="matrix_text" class="sr-only" aria-hidden="true">{{ image_output }}</textarea>
+              <input type="hidden" name="matrix_width" value="{{ matrix_size.width }}" />
+              <input type="hidden" name="matrix_height" value="{{ matrix_size.height }}" />
               <input type="hidden" name="plot_title" value="Before Levitt" />
               <input type="hidden" name="plot_cmap" value="gray" />
               <input type="hidden" name="plot_vmin" value="0" />
@@ -46,6 +74,7 @@
 
       <section class="card">
         <h2>Video Frames</h2>
+        <p class="hint">Convert frames to matrices and optionally animate the corresponding `matrix_plot` output.</p>
         <form method="post" enctype="multipart/form-data" class="upload-form">
           <input type="hidden" name="mode" value="video" />
           <label for="video">Choose a video file:</label>
@@ -61,6 +90,68 @@
               Max frames
               <input type="number" name="max_frames" min="1" max="{{ max_frames }}" value="10" />
               <span class="hint">Up to {{ max_frames }} frames shown</span>
+            </label>
+            <label>
+              Width (px)
+              <input
+                type="number"
+                name="matrix_width"
+                min="{{ matrix_size_limits.min }}"
+                max="{{ matrix_size_limits.max }}"
+                value="{{ matrix_size.width }}"
+                required
+              />
+            </label>
+            <label>
+              Height (px)
+              <input
+                type="number"
+                name="matrix_height"
+                min="{{ matrix_size_limits.min }}"
+                max="{{ matrix_size_limits.max }}"
+                value="{{ matrix_size.height }}"
+                required
+              />
+            </label>
+            <label>
+              Plot delay (s)
+              <input
+                type="number"
+                step="0.05"
+                min="0.05"
+                name="video_delay"
+                value="{{ video_plot_form.delay }}"
+              />
+              <span class="hint">Time between plotted frames</span>
+            </label>
+            <label>
+              Loops (repeat)
+              <input
+                type="number"
+                min="1"
+                max="20"
+                name="video_repeat"
+                value="{{ video_plot_form.repeat }}"
+              />
+              <span class="hint">Number of playback cycles</span>
+            </label>
+            <label>
+              Colormap
+              <select name="video_cmap">
+                {% for value, label in plot_cmaps %}
+                <option value="{{ value }}" {% if value == video_plot_form.cmap %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>
+              Min (vmin)
+              <input type="number" step="any" name="video_vmin" value="{{ video_plot_form.vmin }}" />
+              <span class="hint">Blank = auto detect</span>
+            </label>
+            <label>
+              Max (vmax)
+              <input type="number" step="any" name="video_vmax" value="{{ video_plot_form.vmax }}" />
+              <span class="hint">Blank = auto detect</span>
             </label>
           </div>
 
@@ -84,6 +175,8 @@
                 <form method="post" class="plot-inline-form">
                   <input type="hidden" name="mode" value="plot" />
                   <textarea name="matrix_text" class="sr-only" aria-hidden="true">{{ frame.matrix }}</textarea>
+                  <input type="hidden" name="matrix_width" value="{{ matrix_size.width }}" />
+                  <input type="hidden" name="matrix_height" value="{{ matrix_size.height }}" />
                   <input type="hidden" name="plot_title" value="{{ frame.label }}" />
                   <input type="hidden" name="plot_cmap" value="gray" />
                   <input type="hidden" name="plot_vmin" value="0" />
@@ -95,6 +188,24 @@
             {% endfor %}
           </div>
         </div>
+        {% if video_plot %}
+        <div class="video-plot-player" data-video-player>
+          <div class="video-plot-header">
+            <h3>Matrix Plot Playback</h3>
+            <p class="hint">Delay {{ '%.2f'|format(video_plot.delay) }} s • Repeat {{ video_plot.repeat }}×</p>
+          </div>
+          <div class="video-plot-stage">
+            <img data-video-plot-frame src="{{ video_plot.frames[0].data_url }}" alt="Matrix plot frame preview" />
+          </div>
+          <p class="video-plot-caption" data-video-plot-caption>{{ video_plot.frames[0].label }} (1/{{ video_plot.frames|length }})</p>
+          <div class="video-plot-controls">
+            <button type="button" data-video-action="play">Play</button>
+            <button type="button" data-video-action="pause">Pause</button>
+            <button type="button" data-video-action="reset">Reset</button>
+          </div>
+        </div>
+        <script id="video-plot-data" type="application/json">{{ video_plot|tojson }}</script>
+        {% endif %}
         {% endif %}
       </section>
 
@@ -103,6 +214,8 @@
         <p class="hint">Paste any Sage-style matrix (e.g. the output above) and preview it using a grayscale colormap.</p>
         <form method="post" class="upload-form">
           <input type="hidden" name="mode" value="plot" />
+          <input type="hidden" name="matrix_width" value="{{ matrix_size.width }}" />
+          <input type="hidden" name="matrix_height" value="{{ matrix_size.height }}" />
           <label for="matrix_text">Matrix values</label>
           <textarea
             id="matrix_text"
@@ -153,5 +266,102 @@
         {% endif %}
       </section>
     </main>
+    {% if video_plot %}
+    <script>
+      (function() {
+        const dataScript = document.getElementById("video-plot-data");
+        if (!dataScript) {
+          return;
+        }
+        let config;
+        try {
+          config = JSON.parse(dataScript.textContent);
+        } catch (err) {
+          console.error("Unable to parse video plot data", err);
+          return;
+        }
+        const frames = config.frames || [];
+        if (!frames.length) {
+          return;
+        }
+        const player = document.querySelector("[data-video-player]");
+        const imageEl = player?.querySelector("[data-video-plot-frame]");
+        const captionEl = player?.querySelector("[data-video-plot-caption]");
+        if (!player || !imageEl || !captionEl) {
+          return;
+        }
+
+        let timer = null;
+        let frameIndex = 0;
+        let loopCount = 0;
+        const delayMs = Math.max(50, (config.delay || 0.3) * 1000);
+        const repeatTarget = Math.max(1, config.repeat || 1);
+
+        const updateFrame = () => {
+          const frame = frames[frameIndex];
+          imageEl.src = frame.data_url;
+          captionEl.textContent = `${frame.label} (${frameIndex + 1}/${frames.length})`;
+        };
+
+        const step = () => {
+          frameIndex += 1;
+          if (frameIndex >= frames.length) {
+            frameIndex = 0;
+            loopCount += 1;
+            if (loopCount >= repeatTarget) {
+              stop();
+              return;
+            }
+          }
+          updateFrame();
+          timer = window.setTimeout(step, delayMs);
+        };
+
+        const play = () => {
+          if (timer !== null) {
+            return;
+          }
+          updateFrame();
+          timer = window.setTimeout(step, delayMs);
+        };
+
+        const stop = () => {
+          if (timer !== null) {
+            window.clearTimeout(timer);
+            timer = null;
+          }
+        };
+
+        const reset = () => {
+          stop();
+          frameIndex = 0;
+          loopCount = 0;
+          updateFrame();
+        };
+
+        updateFrame();
+
+        player.addEventListener("click", (event) => {
+          const action = event.target?.getAttribute?.("data-video-action");
+          if (!action) {
+            return;
+          }
+          if (action === "play") {
+            play();
+          } else if (action === "pause") {
+            stop();
+          } else if (action === "reset") {
+            reset();
+          }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            stop();
+          }
+        });
+      })();
+    </script>
+    {% endif %}
   </body>
 </html>
